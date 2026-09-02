@@ -57,6 +57,16 @@ export async function encodeFile(filename, fileBytes, passphrase) {
   return new Int16Array(wire.buffer, wire.byteOffset, wire.length / 2);
 }
 
+// Le magic est écrit en clair (avant chiffrement) : cette détection est donc
+// fiable indépendamment de la passphrase fournie, et permet de choisir
+// automatiquement le bon mode de décodage sans que l'utilisateur ait à le
+// préciser lui-même.
+export function isFileModeAudio(pcmInt16) {
+  if (pcmInt16.length < 2) return false;
+  const bytes = new Uint8Array(pcmInt16.buffer, pcmInt16.byteOffset, 4);
+  return MAGIC.every((b, i) => bytes[i] === b);
+}
+
 export async function decodeFile(pcmInt16, passphrase) {
   const wire = new Uint8Array(pcmInt16.buffer, pcmInt16.byteOffset, pcmInt16.length * 2);
 

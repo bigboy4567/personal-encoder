@@ -5,7 +5,7 @@ import { modulate, demodulate, SAMPLE_RATE, DemodulationError } from "./modem.js
 import { encodeWav, decodeWav, encodeWavInt16, decodeWavInt16 } from "./wav.js";
 import { decodeAnyAudioTo44100 } from "./audio-decode.js";
 import { generatePassphrase } from "./passgen.js";
-import { encodeFile, decodeFile, FileDecodeError, MAX_FILE_SIZE } from "./filemode.js";
+import { encodeFile, decodeFile, isFileModeAudio, FileDecodeError, MAX_FILE_SIZE } from "./filemode.js";
 
 async function encodeMessage(message, passphrase) {
   const blob = await encrypt(passphrase, new TextEncoder().encode(message));
@@ -155,7 +155,7 @@ passgenCopy.addEventListener("click", async () => {
   }
 });
 
-// ---- Décodage : fichier audio uploadé ----
+// ---- Décodage : fichier audio uploadé (mode texte/fichier détecté automatiquement) ----
 const decForm = document.getElementById("decode-form");
 const decFile = document.getElementById("decode-file");
 const decKey = document.getElementById("decode-key");
@@ -164,27 +164,9 @@ const decResult = document.getElementById("decode-result");
 const decFileResult = document.getElementById("decode-file-result");
 const decFileName = document.getElementById("decode-file-name");
 const decFileDownload = document.getElementById("decode-file-download");
-const micDivider = document.getElementById("mic-divider");
-const micSection = document.getElementById("mic-section");
-
-function currentDecodeMode() {
-  return document.querySelector('input[name="decode-mode"]:checked').value;
-}
-
-document.querySelectorAll('input[name="decode-mode"]').forEach((radio) => {
-  radio.addEventListener("change", () => {
-    const isFile = currentDecodeMode() === "file";
-    micDivider.hidden = isFile;
-    micSection.hidden = isFile;
-    decStatus.textContent = "";
-    decResult.hidden = true;
-    decFileResult.hidden = true;
-  });
-});
 
 decForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const mode = currentDecodeMode();
   const file = decFile.files[0];
   const passphrase = decKey.value;
   if (!file || !passphrase) return;
@@ -197,7 +179,26 @@ decForm.addEventListener("submit", async (e) => {
   try {
     const arrayBuffer = await file.arrayBuffer();
 
-    if (mode === "text") {
+    // Le magic du mode fichier est écrit en clair : cette détection ne dépend
+    // pas de la passphrase, donc fiable même si la passphrase saisie est fausse.
+    let isFile = false;
+    let int16Samples = null;
+    try {
+      int16Samples = decodeWavInt16(new Uint8Array(arrayBuffer)).samples;
+      isFile = isFileModeAudio(int16Samples);
+    } catch {
+      // pas un WAV lisible tel quel -> on tentera le mode texte plus bas
+    }
+
+    if (isFile) {
+      const { filename, fileBytes } = await decodeFile(int16Samples, passphrase);
+      const blob = new Blob([fileBytes]);
+      const url = URL.createObjectURL(blob);
+      decFileName.textContent = `${filename} (${formatBytes(fileBytes.length)})`;
+      decFileDownload.href = url;
+      decFileDownload.download = filename;
+      decFileResult.hidden = false;
+    } else {
       let samples;
       try {
         const parsed = decodeWav(new Uint8Array(arrayBuffer));
@@ -208,15 +209,6 @@ decForm.addEventListener("submit", async (e) => {
       const text = await decodeMessage(samples, passphrase);
       decResult.textContent = text;
       decResult.hidden = false;
-    } else {
-      const { samples } = decodeWavInt16(new Uint8Array(arrayBuffer));
-      const { filename, fileBytes } = await decodeFile(samples, passphrase);
-      const blob = new Blob([fileBytes]);
-      const url = URL.createObjectURL(blob);
-      decFileName.textContent = `${filename} (${formatBytes(fileBytes.length)})`;
-      decFileDownload.href = url;
-      decFileDownload.download = filename;
-      decFileResult.hidden = false;
     }
     decStatus.textContent = "";
   } catch (err) {
