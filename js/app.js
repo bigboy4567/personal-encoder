@@ -126,7 +126,7 @@ encForm.addEventListener("submit", async (e) => {
       const pcm = await encodeFile(file.name, fileBytes, passphrase);
       wavBytes = encodeWavInt16(pcm, SAMPLE_RATE);
       durationLabel = `${formatBytes(fileBytes.length)} encodés`;
-      downloadName = `${file.name}.wav`;
+      downloadName = "fichier.wav"; // le nom d'origine reste caché à l'intérieur, chiffré
     }
 
     const blob = new Blob([wavBytes], { type: "audio/wav" });
