@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Encoder</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #131826;
+    --panel-border: #232a3d;
+    --text: #e6e9f0;
+    --muted: #8791a8;
+    --accent: #5fd3a6;
+    --accent-dark: #3ba883;
+    --danger: #e2685f;
+    --input-bg: #0e1220;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+  main { width: 100%; max-width: 620px; }
+  h1 { font-size: 1.5rem; margin-bottom: 0.2em; }
+  .subtitle { color: var(--muted); margin-top: 0; margin-bottom: 28px; font-size: 0.92rem; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    color: var(--muted);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .tab-btn.active { color: var(--accent); border-color: var(--accent-dark); }
+  .panel { display: none; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 24px; }
+  .panel.active { display: block; }
+  label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--muted); }
+  textarea, input[type="text"], input[type="password"], input[type="file"] {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+    font-family: inherit;
+  }
+  textarea { min-height: 90px; resize: vertical; }
+  button[type="submit"], .record-btn {
+    background: var(--accent);
+    color: #06251a;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  button[type="submit"]:hover, .record-btn:hover { background: var(--accent-dark); color: var(--text); }
+  .status { margin-top: 12px; color: var(--muted); font-size: 0.88rem; min-height: 1.2em; }
+  .result { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--panel-border); }
+  .result[hidden] { display: none; }
+  audio { width: 100%; margin-bottom: 10px; }
+  .download-link {
+    display: inline-block;
+    color: var(--accent);
+    text-decoration: none;
+    border: 1px solid var(--accent-dark);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.88rem;
+  }
+  .download-link:hover { background: var(--accent-dark); color: var(--text); }
+  .duration { color: var(--muted); font-size: 0.82rem; margin-top: 8px; }
+  .decoded-text {
+    background: var(--input-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .divider { border: none; border-top: 1px solid var(--panel-border); margin: 24px 0; }
+  .hint { color: var(--muted); font-size: 0.8rem; margin-top: -8px; margin-bottom: 16px; }
+  .error-text { color: var(--danger); }
+  .inline-label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.85rem; }
+  .passgen-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--input-bg);
+    border: 1px solid var(--accent-dark);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    font-family: "Consolas", monospace;
+    font-size: 0.9rem;
+  }
+  .passgen-result[hidden] { display: none; }
+  .copy-btn {
+    background: var(--accent);
+    color: #06251a;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .copy-btn:hover { background: var(--accent-dark); color: var(--text); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Personal Encoder</h1>
+  <p class="subtitle">Encode un message en signal audio chiffré et modulé selon une passphrase générée automatiquement (prix du BTC + suffixe aléatoire). Seule cette passphrase permet de le décoder.</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-target="tab-encode">Encoder</button>
+    <button class="tab-btn" data-target="tab-decode">Décoder</button>
+  </div>
+
+  <section id="tab-encode" class="panel active">
+    <form id="encode-form">
+      <label for="encode-message">Message à encoder</label>
+      <textarea id="encode-message" required></textarea>
+
+      <button type="submit">Encoder en audio</button>
+    </form>
+    <div id="encode-status" class="status"></div>
+    <div id="encode-result" class="result" hidden>
+      <label class="inline-label">Passphrase générée — note-la et transmets-la au destinataire par un autre canal</label>
+      <div id="passgen-result" class="passgen-result">
+        <span id="passgen-value"></span>
+        <button type="button" id="passgen-copy" class="copy-btn">Copier</button>
+      </div>
+      <p class="hint">Le prix du BTC (donnée publique) est converti en données aléatoires puis combiné à un suffixe aléatoire cryptographique — c'est ce suffixe qui protège réellement le message.</p>
+      <audio id="encode-audio" controls></audio>
+      <a id="encode-download" class="download-link" href="#">Télécharger le .wav</a>
+      <div id="encode-duration" class="duration"></div>
+    </div>
+  </section>
+
+  <section id="tab-decode" class="panel">
+    <form id="decode-form">
+      <label for="decode-file">Fichier audio (.wav, ou tout format que ton navigateur sait lire)</label>
+      <input type="file" id="decode-file" accept="audio/*" required>
+
+      <label for="decode-key">Passphrase</label>
+      <input type="password" id="decode-key" required autocomplete="off">
+
+      <button type="submit">Décoder le fichier</button>
+    </form>
+    <div id="decode-status" class="status"></div>
+    <div id="decode-result" class="result decoded-text" hidden></div>
+
+    <hr class="divider">
+
+    <label for="decode-key-mic">Passphrase (pour l'enregistrement micro)</label>
+    <input type="password" id="decode-key-mic" autocomplete="off">
+    <p class="hint">Joue le son (haut-parleur) pendant l'enregistrement, puis arrête pour décoder.</p>
+    <button type="button" id="record-btn" class="record-btn">Enregistrer depuis le micro</button>
+    <div id="record-status" class="status"></div>
+    <div id="decode-result-mic" class="result decoded-text" hidden></div>
+  </section>
+</main>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
