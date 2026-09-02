@@ -1,4 +1,4 @@
-// Encodage de fichiers (jusqu'à 50 Mo) en .wav — port fidèle de core/filemode.py.
+// Encodage de fichiers (jusqu'à 100 Mo) en .wav — port fidèle de core/filemode.py.
 //
 // Contrairement au mode texte (modulation FSK, pensé pour de courts messages),
 // un fichier volumineux est bien trop gros pour être modulé en tonalités dans
@@ -21,7 +21,7 @@
 import { encrypt, decrypt } from "./crypto.js";
 
 const MAGIC = new Uint8Array([0x50, 0x45, 0x46, 0x31]); // "PEF1"
-export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 Mo
+export const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 Mo
 
 export class FileDecodeError extends Error {}
 

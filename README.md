@@ -19,7 +19,7 @@ si hors-ligne).
    - *Mode texte* — le message chiffré est modulé en tonalités (FSK) selon
      un protocole (fréquences, marqueur de synchronisation) lui-même dérivé
      de la passphrase.
-   - *Mode fichier* (jusqu'à 50 Mo) — les octets chiffrés (et compressés en
+   - *Mode fichier* (jusqu'à 100 Mo) — les octets chiffrés (et compressés en
      gzip si ça réduit la taille) sont écrits directement comme échantillons
      audio bruts : quasi instantané quelle que soit la taille du fichier.
 3. **Passphrase générée automatiquement** — un préfixe dérivé du prix du BTC
