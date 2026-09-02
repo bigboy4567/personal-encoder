@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Personal Encoder</title>
+<meta name="theme-color" content="#0b0e14">
+<meta name="description" content="Encode un message ou un fichier en signal audio chiffré nécessitant ce logiciel pour être décodé.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
   :root {
     --bg: #0b0e14;
@@ -96,6 +101,31 @@
   .mode-toggle label { display: flex; align-items: center; gap: 6px; color: var(--text); margin-bottom: 0; cursor: pointer; }
   .mode-toggle input[type="radio"] { accent-color: var(--accent); cursor: pointer; }
   .file-info { color: var(--muted); font-size: 0.8rem; margin-top: -10px; margin-bottom: 16px; }
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--input-bg);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  .progress-bar[hidden] { display: none; }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width 0.2s ease;
+  }
+  #decode-file-preview {
+    display: block;
+    max-width: 100%;
+    max-height: 320px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    border: 1px solid var(--panel-border);
+  }
+  #decode-file-preview[hidden] { display: none; }
   .hint { color: var(--muted); font-size: 0.8rem; margin-top: -8px; margin-bottom: 16px; }
   .error-text { color: var(--danger); }
   .inline-label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.85rem; }
@@ -154,6 +184,7 @@
       <button type="submit">Encoder en audio</button>
     </form>
     <div id="encode-status" class="status"></div>
+    <div id="encode-progress" class="progress-bar" hidden><div id="encode-progress-fill" class="progress-fill"></div></div>
     <div id="encode-result" class="result" hidden>
       <label class="inline-label">Passphrase générée — note-la et transmets-la au destinataire par un autre canal</label>
       <div id="passgen-result" class="passgen-result">
@@ -177,8 +208,10 @@
       <button type="submit">Décoder</button>
     </form>
     <div id="decode-status" class="status"></div>
+    <div id="decode-progress" class="progress-bar" hidden><div id="decode-progress-fill" class="progress-fill"></div></div>
     <div id="decode-result" class="result decoded-text" hidden></div>
     <div id="decode-file-result" class="result" hidden>
+      <img id="decode-file-preview" hidden alt="Aperçu de l'image décodée">
       <p>Fichier décodé : <strong id="decode-file-name"></strong></p>
       <a id="decode-file-download" class="download-link" href="#">Télécharger le fichier</a>
     </div>
