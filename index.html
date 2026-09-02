@@ -92,6 +92,10 @@
     word-break: break-word;
   }
   .divider { border: none; border-top: 1px solid var(--panel-border); margin: 24px 0; }
+  .mode-toggle { display: flex; gap: 16px; margin-bottom: 18px; font-size: 0.9rem; }
+  .mode-toggle label { display: flex; align-items: center; gap: 6px; color: var(--text); margin-bottom: 0; cursor: pointer; }
+  .mode-toggle input[type="radio"] { accent-color: var(--accent); cursor: pointer; }
+  .file-info { color: var(--muted); font-size: 0.8rem; margin-top: -10px; margin-bottom: 16px; }
   .hint { color: var(--muted); font-size: 0.8rem; margin-top: -8px; margin-bottom: 16px; }
   .error-text { color: var(--danger); }
   .inline-label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.85rem; }
@@ -133,9 +137,20 @@
   </div>
 
   <section id="tab-encode" class="panel active">
+    <div class="mode-toggle">
+      <label><input type="radio" name="encode-mode" value="text" checked> Texte</label>
+      <label><input type="radio" name="encode-mode" value="file"> Fichier (max 50 Mo)</label>
+    </div>
     <form id="encode-form">
-      <label for="encode-message">Message à encoder</label>
-      <textarea id="encode-message" required></textarea>
+      <div id="encode-text-fields">
+        <label for="encode-message">Message à encoder</label>
+        <textarea id="encode-message"></textarea>
+      </div>
+      <div id="encode-file-fields" hidden>
+        <label for="encode-file-input">Fichier à encoder (max 50 Mo)</label>
+        <input type="file" id="encode-file-input">
+        <p id="encode-file-info" class="file-info"></p>
+      </div>
 
       <button type="submit">Encoder en audio</button>
     </form>
@@ -154,6 +169,10 @@
   </section>
 
   <section id="tab-decode" class="panel">
+    <div class="mode-toggle">
+      <label><input type="radio" name="decode-mode" value="text" checked> Texte</label>
+      <label><input type="radio" name="decode-mode" value="file"> Fichier</label>
+    </div>
     <form id="decode-form">
       <label for="decode-file">Fichier audio (.wav, ou tout format que ton navigateur sait lire)</label>
       <input type="file" id="decode-file" accept="audio/*" required>
@@ -161,19 +180,25 @@
       <label for="decode-key">Passphrase</label>
       <input type="password" id="decode-key" required autocomplete="off">
 
-      <button type="submit">Décoder le fichier</button>
+      <button type="submit">Décoder</button>
     </form>
     <div id="decode-status" class="status"></div>
     <div id="decode-result" class="result decoded-text" hidden></div>
+    <div id="decode-file-result" class="result" hidden>
+      <p>Fichier décodé : <strong id="decode-file-name"></strong></p>
+      <a id="decode-file-download" class="download-link" href="#">Télécharger le fichier</a>
+    </div>
 
-    <hr class="divider">
+    <hr class="divider" id="mic-divider">
 
-    <label for="decode-key-mic">Passphrase (pour l'enregistrement micro)</label>
-    <input type="password" id="decode-key-mic" autocomplete="off">
-    <p class="hint">Joue le son (haut-parleur) pendant l'enregistrement, puis arrête pour décoder.</p>
-    <button type="button" id="record-btn" class="record-btn">Enregistrer depuis le micro</button>
-    <div id="record-status" class="status"></div>
-    <div id="decode-result-mic" class="result decoded-text" hidden></div>
+    <div id="mic-section">
+      <label for="decode-key-mic">Passphrase (pour l'enregistrement micro — mode texte uniquement)</label>
+      <input type="password" id="decode-key-mic" autocomplete="off">
+      <p class="hint">Joue le son (haut-parleur) pendant l'enregistrement, puis arrête pour décoder.</p>
+      <button type="button" id="record-btn" class="record-btn">Enregistrer depuis le micro</button>
+      <div id="record-status" class="status"></div>
+      <div id="decode-result-mic" class="result decoded-text" hidden></div>
+    </div>
   </section>
 </main>
 <script type="module" src="js/app.js"></script>
